@@ -2,6 +2,116 @@
 Step by step example project with api in Laravel 5.8, front with Angular 8 and authentication with JWT.
 
 ---
+
+### Verificando a versão do Angular CLI
+```sh
+$ ng --version
+```
+Se a versão for < que a 8 atualize para versão 8 (8.1.3 no momento).
+```sh
+$ npm uninstall -g @angular/cli
+$ npm cache clean
+# if npm version is > 5 then use `npm cache verify` to avoid errors (or to avoid using --force)
+$ npm install -g @angular/cli@latest
+```
+
+### Criando o projeto (FRONT)
+
+```sh
+$ ng new start-project-front
+$ cd start-project-front
+```
+
+### Instalando o Bootstrap
+##### Opção 1 (JQuery)
+
+```sh
+$ npm install bootstrap@4 jquery --save
+```
+As partes JavaScript do Bootstrap são dependentes do jQuery. Então você precisa do arquivo de biblioteca jQuery JavaScript também.
+Em seguida adicione no seu arquivo __angular.json__.
+```
+"styles": [
+    "src/styles.css","node_modules/bootstrap/dist/css/bootstrap.min.css"
+],
+"scripts": [
+    "node_modules/jquery/dist/jquery.min.js",
+    "node_modules/bootstrap/dist/js/bootstrap.min.js"
+]
+```
+
+#####  Opção 2 (ng-bootstrap)
+__ng-bootstrap__ Ele contém um conjunto de diretivas Angulares nativas com base na marcação e no CSS do Bootstrap. Como resultado, não depende do JavaScript do jQuery ou do Bootstrap.
+```sh
+$ npm install --save @ng-bootstrap/ng-bootstrap
+```
+
+Após a instalação, importe-o no seu módulo raiz e registre-o no array @NgModule imports.
+```
+import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
+@NgModule({
+    declarations: [AppComponent, ...],
+    imports: [NgbModule.forRoot(), ...],
+    bootstrap: [AppComponent]
+})
+```
+
+Agora instale o bootstrap 4 requerido pelo ng-bootstrap.
+```sh
+$ npm install bootstrap@4  --save 
+```
+Em seguida adicione no seu arquivo __angular.json__.
+```
+"styles": [
+    "src/styles.css",
+    "node_modules/bootstrap/dist/css/bootstrap.min.css"
+],
+```
+
+##### Opção 3 (ngx-bootstrap)
+[ngx-bootstrap gitHub](https://github.com/valor-software/ngx-bootstrap/blob/development/docs/getting-started/ng-cli.md)
+[ngx-bootstrap documentation](https://valor-software.com/ngx-bootstrap/#/documentation#getting-started)
+Adicionar o __ngx-bootstrap__ e o __bootstrap__.
+```sh
+$ npm install ngx-bootstrap bootstrap --save
+```
+
+Em seguida adicione no seu arquivo __angular.json__.
+```
+ "styles": [
+    "./node_modules/bootstrap/dist/css/bootstrap.min.css", 
+    "styles.css",
+],
+```
+
+Exemplo de utilização do __ngx-bootstrap__:
+Abrir ```src/app/app.module.ts``` e incluir:
+```
+import { AlertModule } from 'ngx-bootstrap';
+...
+
+@NgModule({
+   ...
+   imports: [AlertModule.forRoot(), ... ],
+   ...
+})
+```
+
+Abrir ```src/app/app.component.html``` e incluir:
+```
+<alert type="success">hello</alert>
+```
+
+Execute o projeto.
+```sh
+$ ng serve
+```
+
+
+
+
+
+---
 # ATUALIZAR TUTORIAL A PARTIR DAQUI
 ---
 ### Instalando Angular e AdminLTE
