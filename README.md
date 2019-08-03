@@ -19,6 +19,8 @@ $ npm install -g @angular/cli@latest
 
 ```sh
 $ ng new start-project-front
+# Would you like to add Angular routing? Yes
+# Which stylesheet format would you like to use? SCSS
 $ cd start-project-front
 ```
 
@@ -107,389 +109,929 @@ Execute o projeto.
 $ ng serve
 ```
 
+### Criando os templates (layouts) que usaremos
+##### blank - *não possui o header e o footer, usaremos nas telas de login e erros;*
+##### full - *possui o header e o footer, usaremos nas telas protegidas;*
 
+Dentro da pasta __app__ vamos criar uma pasta __layouts__ e em seguida vamos criar nossos templates:
 
+#### blank
+```sh
+$ ng g c layouts/blank --skipTests
+```
 
+Altere o arquivo __blank.component.html__ conforme abaixo:
+```
+<!-- ============================================================== -->
+<!-- Only router without any element -->
+<!-- ============================================================== -->
+<router-outlet></router-outlet>
+```
 
----
-# ATUALIZAR TUTORIAL A PARTIR DAQUI
----
-### Instalando Angular e AdminLTE
-Podemos criar uma aplicação angular do zero com ng-CLI (ng new my-app), porém iremos utilizar um painel pronto, o [AdminLTE](https://adminlte.io/) através do seu repositório no [GitHub](https://github.com/csotomon/Angular2-AdminLTE).
-1. Copiar a url para clonar o AdminLTE na pasta raiz do nosso projeto (fora da pasta api que criamos).
+#### full
+```sh
+$ ng g c layouts/full --skipTests
 ```
-git clone https://github.com/csotomon/Angular2-AdminLTE.git
-```
-2. Renomear a pasta da aplicação criada para “web”.
-3. Rodar o __npm install__.
-4. Dentro da pasta __web/src/environments__, no arquivo __environment.ts__, onde criamos nossas constantes no Angular, vamos criar uma constante para nossa api.
-```
-api_url: 'http://localhost:8000/api'
-```
-__OBS.:__ No arquivo __environment.prod.ts__ definimos as urls de produção.
 
-### Alterando as rotas
-__Vamos usar somente a parte do painel, onde todas as seções, exceto o Login, serão privadas.__
-1. Em __app.modules.ts__ limpar e deixar apenas o __AppComponent__, com isso não vamos mais carregar os __starter__.
-2. Em app criar o módulo __auth__, que usaremos para autenticação:
+Altere o arquivo __full.component.html__ conforme abaixo:
 ```
-ng g module auth
+<app-header-navigation></app-header-navigation>
+<router-outlet></router-outlet>
 ```
-* importar no app.modules.ts.
-3. Dentro da pasta do módulo auth vamos criar um componente chamado __login__ e declará-lo no módulo auth.
+
+#### Criando o header chamado no layout full
+```sh
+$ ng g c shared/header-navigation --skipTests
 ```
-ng g component auth/login
+__Por enquanto não vamos editar o header criado!__
+
+#### Dentro da pasta "shared" vamos criar o Spinner, que fará o load entre as páginas:
+Vamos criar esse processo de forma manual:
+1. botão direito na pasta __shared__ new file;
+2. de o nome de: __spinner.component.ts__
+3. o __gif__ chamado no spinner encontra-se na pasta __assets/images/loading.gif__ deste repositório.
+
+Edite o arquivo __spinner.component.ts__
 ```
-4. Trocar as rotas da aplicação inicial em __app/app-routing/app-routing.modules.ts__.
+import {
+    Component,
+    Input,
+    OnDestroy,
+    Inject,
+    ViewEncapsulation
+} from '@angular/core';
+import {
+    Router,
+    NavigationStart,
+    NavigationEnd,
+    NavigationCancel,
+    NavigationError
+} from '@angular/router';
+import { DOCUMENT } from '@angular/common';
+
+@Component({
+    selector: 'app-spinner',
+    template: `
+        <div class="preloader" *ngIf="isSpinnerVisible">
+            <div class="spinner">
+                <img src="assets/images/loading.gif" alt="">
+            </div>
+        </div>`,
+    encapsulation: ViewEncapsulation.None
+})
+export class SpinnerComponent implements OnDestroy {
+    public isSpinnerVisible = true;
+
+    @Input() public backgroundColor = 'rgba(0, 115, 170, 0.69)';
+
+    constructor(
+        private router: Router,
+        @Inject(DOCUMENT) private document: Document
+    ) {
+        this.router.events.subscribe(
+            event => {
+                if (event instanceof NavigationStart) {
+                    this.isSpinnerVisible = true;
+                } else if (
+                    event instanceof NavigationEnd ||
+                    event instanceof NavigationCancel ||
+                    event instanceof NavigationError
+                ) {
+                    this.isSpinnerVisible = false;
+                }
+            },
+            () => {
+                this.isSpinnerVisible = false;
+            }
+        );
+    }
+
+    ngOnDestroy(): void {
+        this.isSpinnerVisible = false;
+    }
+}
+```
+
+#### Vamos importar os componentes criados no módulo global (app.module.ts)
+```
+import { SpinnerComponent } from './shared/spinner.component';
+import { BlankComponent } from './layouts/blank/blank.component';
+import { FullComponent } from './layouts/full/full.component';
+import { HeaderNavigationComponent } from './shared/header-navigation/header-navigation.component';
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    SpinnerComponent,
+    BlankComponent,
+    FullComponent,
+    HeaderNavigationComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+```
+
+### Criando a tela de login
+```sh
+$ ng g c login --skipTests
+```
+Vamos criar manualmente o __module__ e __route__ independentes para o component __login__:
+1. botão direito na pasta login e new file __login.module.ts__;
 ```
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
-import { LoginComponent } from '../auth/login/login.component';
+import { LoginRoutes } from './login.routing';
+import { LoginComponent } from './login.component';
 
 @NgModule({
   imports: [
-    RouterModule.forRoot([
-      { path: '', redirectTo: 'admin', pathMatch: 'full' },
-      { path: 'auth/login', component: LoginComponent },
-    ])
+    FormsModule,
+    ReactiveFormsModule,
+    CommonModule,
+    RouterModule.forChild(LoginRoutes)
   ],
-  declarations: [],
-  exports: [ RouterModule]
+  declarations: [
+    LoginComponent
+  ]
 })
-export class AppRoutingModule { }
+export class LoginModule { }
 ```
 
-### Formulário de login
-1. Criar o formGroup no component login;
-2. Importar o módulo ReactiveFormsModule no auth.module.ts
-3. Criar o formulário login.component.html
-__HTML__
+2. botão direito na pasta login e new file __login.routing.ts__;
 ```
-<div class="container app-login">
-  <div class="row">
-    <div class="col-xs-12 col-md-6 col-md-offset-3">
-      <div class="panel panel-default">
-        <div class="panel-body">
-          <h1 class="text-center">
-            <b>TJG</b> Web
-            <br/>
-            <small>Área Restrita</small>
-          </h1>
-          <br/>
-          <div class="alert alert-danger alert-dismissible" role="alert" *ngIf="errorCredentials">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-            Usuário ou senha inválidos.
-          </div>
-          <form [formGroup]="f" novalidate>
-            <div class="form-group has-feedback" [ngClass]="{'has-success': f.controls['email'].valid,
-                'has-error': f.controls['email'].invalid && (f.controls['email'].touched || f.controls['email'].dirty)}">
-              <input type="email" formControlName="email" class="form-control" id="InputEmail" placeholder="Email">
-              <span *ngIf="f.controls['email'].valid" class="glyphicon glyphicon-ok form-control-feedback" aria-hidden="true"></span>
-              <span *ngIf="f.controls['email'].invalid && (f.controls['email'].touched || f.controls['email'].dirty)">
-                <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
-                <span class="text-danger">E-mail inválido.</span>
-              </span>
-            </div>
-            <div class="form-group" [ngClass]="{'has-success': f.controls['password'].valid,
-                 'has-error': f.controls['password'].invalid && (f.controls['password'].touched || f.controls['password'].dirty)}">
-              <input type="password" formControlName="password" class="form-control" id="InputPassword" placeholder="Password">
-              <span class="text-danger" *ngIf="f.controls['password'].invalid && (f.controls['password'].touched || f.controls['password'].dirty)">Campo obrigatório.</span>
-            </div>
-            <button type="submit" class="btn btn-default" [disabled]="f.invalid" (click)="onSubmit()">Entrar</button>
-          </form>
+import { Routes } from '@angular/router';
+import { LoginComponent } from './login.component';
+
+export const LoginRoutes: Routes = [
+    {
+        path: '',
+        children: [
+            {
+                path: '',
+                component: LoginComponent,
+                data: {
+                    title: 'Login',
+                    urls: [
+                        { title: 'Login', url: '/' },
+                        { title: 'Login' }
+                    ]
+                }
+            }
+        ]
+    }
+
+];
+```
+
+#### login.component.html
+```
+<div class="container">
+    <form class="form-signin" [formGroup]="formGroupLogin" (ngSubmit)="onSubmitLogin()" novalidate>
+        <div class="text-center mb-4">
+            <h1>LOGIN</h1>
         </div>
-      </div>
-    </div>
-  </div>
+
+        <div class="form-label-group">
+            <input type="text" class="form-control" placeholder="Email" required autofocus
+                [ngClass]="{ 'input-error': ( formGroupLogin.get('username').dirty && formGroupLogin.get('username').hasError('required') ) }"
+                name="username" id="username" formControlName="username">
+            <label for="username">Email</label>
+        </div>
+
+        <div class="form-label-group">
+            <input type="password" class="form-control" placeholder="Senha de acesso" required
+                [ngClass]="{ 'input-error': ( formGroupLogin.get('password').dirty && formGroupLogin.get('password').hasError('required') ) || ( formGroupLogin.get('password').dirty && formGroupLogin.get('password').hasError('minlength') ) || ( formGroupLogin.get('password').dirty && formGroupLogin.get('password').hasError('maxlength') ) }"
+                name="password" id="password" formControlName="password">
+            <label for="password">Senha de acesso</label>
+        </div>
+        <button type="submit" class="btn btn-lg btn-primary btn-block" [disabled]="submitted">Entrar <img
+                src="assets/images/loading_login.gif" alt="" *ngIf="submitted"></button>
+        <p class="mt-5 mb-3 text-muted text-center">&copy; 2017 Linha Direta Company</p>
+        <div class="alert alert-danger" *ngIf="errorCredentials">
+            <strong>Erro!</strong> Email ou senha inválidos.
+        </div>
+    </form>
 </div>
 ```
 
-__CSS__
+#### login.component.scss
 ```
-.app-login .row{margin-top: 20vh;}
-.app-login .panel-body{box-shadow: 0px 0px 10px 3px #ccc;}
+.container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+  }
+  .form-control {
+      height: calc(48px + 2px);
+  }
+  
+  .form-signin {
+      width: 100%;
+      max-width: 420px;
+      padding: 15px;
+      margin: 0 auto;
+      top: 50%;
+      transform: translateY(-50%);
+      position: relative;
+    }
+    
+    .form-label-group {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    
+    .form-label-group > input,ng g c dashboard --skipTests
+    .form-label-group > label {
+      padding: 12px 12px;
+    }
+    
+    .form-label-group > label {
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: block;
+      width: 100%;
+      margin-bottom: 0; /* Override default `<label>` margin */
+      line-height: 1.5;
+      color: #495057;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      transition: all .1s ease-in-out;
+    }
+    
+    .form-label-group input::-webkit-input-placeholder {
+      color: transparent;
+    }
+    
+    .form-label-group input:-ms-input-placeholder {
+      color: transparent;
+    }
+    
+    .form-label-group input::-ms-input-placeholder {
+      color: transparent;
+    }
+    
+    .form-label-group input::-moz-placeholder {
+      color: transparent;
+    }
+    
+    .form-label-group input::placeholder {
+      color: transparent;
+    }
+    
+    .form-label-group input:not(:placeholder-shown) {
+      padding-top: calc(12px + 12px * (2 / 3));
+      padding-bottom: calc(12px / 3);
+    }
+    
+    .form-label-group input:not(:placeholder-shown) ~ label {
+      padding-top: calc(.12px / 3);
+      padding-bottom: calc(12px / 3);
+      font-size: 12px;
+      color: #777;
+    }
+  
+  .btn {
+    img {
+      width: 26px;
+      position: absolute;
+      right: 25px;
+    }
+  }
+
+  .logo {
+      width: 80%;
+  }
 ```
 
-### Criando serviço de autenticação
-1. criar, na pasta __auth__, o serviço que validará as rotas.
+#### login.component.ts
 ```
-ng g service services/auth
-```
-2. Registrar o serviço no módulo auth:
-```
-@NgModule({
- imports: [
-   CommonModule,
-   ReactiveFormsModule
- ],
- declarations: [
-   LoginComponent
- ],
- providers: [
-   AuthService
- ]
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
+
+@Component({
+  selector: 'app-login',
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.scss']
 })
-```
-3. No serviço de autenticação criar o método de login que receberá as informações do formulário e requisitará a autenticação a Api;
-4. Importar o __HttpClient__ que fará nossas requisições a Api;
-5. Importar o __environment__ onde declaramos nossas constantes;
-```
-login(credentials: {email: string, password: string}) {
-   return this.http.post('${environment.api_url}/auth/login', credentials);
- }
-```
-6. No componente login, chamar o serviço de autenticação, método login.
-    - No construtor importar o serviço de autenticação
+export class LoginComponent implements OnInit {
 
- ### Ativando CORS no Laravel
-Instalar a biblioteca [https://github.com/barryvdh/laravel-cors](https://github.com/barryvdh/laravel-cors) na nossa Api.
-```
-composer require barryvdh/laravel-cors
-```
-2. Registrar um grupo de middleware:
-*Podemos registar de forma __global__, __web__ ou __api__, como estamos usando o laravel somente como __api__ é nela que iremos registrar.*
-```
-Api / App / Http / Kernel.php
-\Barryvdh\Cors\HandleCors::class
-```
-Publicar o arquivo de configuração que será gerado na pasta __config__.
-```
-php artisan vendor:publish --provider="Barryvdh\Cors\ServiceProvider"
-```
-O arquivo gerado foi o __cors.php__ nele serão feitas as configurações de cabeçalho.
-Liberar a proteção __CSRF__, em *Api / App / Http / Middleware / VerifyCsrfToken*
-```
-protected $except = [
-    'api/*'
-];
-```
-### Armazenando token
+  submitted: boolean = false;
+  errorCredentials: boolean = false;
 
-1. No método __login__ interceptar a resposta com o __.do()__, para usar esse método será preciso tipar a requisição post, usar o __<any>__.
-2. Criar um __hash base 64__ para os dados do usuário que ficará no localStorage, usar o método __btoa()__ para isso.
-3. No componente login serão tratados os erros caso ocorra.
-4. Criar no serviço o método que checa se o usuário tá logado.
+  username = new FormControl('', [
+    Validators.required
+  ]);
 
-#### Finalizando AuthService e Mostrando dados do usuário
-1. Criar uma interface (model) para o nosso user;
-```
-export interface User {
-id: number;
-name: string;
-email: string;
-created_at: string;
-updated_at: string;
+  password = new FormControl('', [
+    Validators.required
+  ]);
+
+
+  formGroupLogin: FormGroup = this.builder.group({
+    username: this.username,
+    password: this.password,
+  });
+
+  constructor(
+    private builder: FormBuilder,
+    private router: Router
+  ) { }
+
+  ngOnInit() {
+  }
 }
 ```
-### Guarda de Rotas
-1. Criar um serviço para os __*guardas*__ das nossas rotas;
-```
-ng g service guards/auth
-```
-2. Renomear o arquivo de __auth.service.ts__ para __auth.guard.ts__ e o nome da classe de __AuthService__ para __AuthGuard__ de acordo com o style guide do Angular.
-*O site do Angular, em Guards, ele mostra algumas interfaces, use a __CanActivate__*.
 
-2. Implementar a classe AuthGuard a esse método.
+### Vamos criar um módulo de erros para página não encontrata e para error interno de servidor
+```sh
+$ ng g c error/not-found --skipTests
+$ ng g c error/internal-serve-error --skipTests
 ```
-import { Observable } from 'rxjs/Observable';
+Vamos criar manualmente o __module__ e __route__ independentes para o component __error__:
+1. botão direito na pasta error e new file __error.module.ts__;
+```
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+import { FormsModule } from '@angular/forms';
+import { Routes, RouterModule } from '@angular/router';
+
+import { ErrorRoutes } from './error.routing';
+import { NotFoundComponent } from './not-found/not-found.component';
+import { InternalServeErrorComponent } from './internal-serve-error/internal-serve-error.component';
+
+@NgModule({
+  imports: [
+    FormsModule,
+    CommonModule,
+    RouterModule.forChild(ErrorRoutes)
+  ],
+  declarations: [
+    NotFoundComponent,
+    InternalServeErrorComponent
+  ]
+})
+export class ErrorModule { }
+```
+
+2. botão direito na pasta error e new file __error.routing.ts__;
+```
+import { Routes } from '@angular/router';
+import { NotFoundComponent } from './not-found/not-found.component';
+import { InternalServeErrorComponent } from './internal-serve-error/internal-serve-error.component';
+
+export const ErrorRoutes: Routes = [
+    {
+        path: '',
+        children: [
+            {
+                path: 'not-found',
+                component: NotFoundComponent
+            },
+            {
+                path: 'internal-serve-error',
+                component: InternalServeErrorComponent
+            }
+        ]
+    }
+
+];
+```
+
+##### not-found.component.html
+```
+<h1>404</h1>
+<h3>PÁGINA NÃO ENCONTRADA</h3>
+```
+
+##### internal-serve-error.component.html
+```
+<h1>500</h1>
+<h3>INTERNAL SERVER ERROR</h3>
+```
+
+#### Alterando o arquivo app.routing.ts para dividir as rotas em públicas e privadas (precisa de autenticação)
+##### Primeiro vamos criar só as rotas públicas e o redirecionamento para página não encontrada
+##### app.routing.ts
+```
+import { NgModule } from '@angular/core';
+import { Routes, RouterModule } from '@angular/router';
+
+import { BlankComponent } from './layouts/blank/blank.component';
+
+export const AppRoutingModule: Routes = [
+  {
+    path: '',
+    component: BlankComponent,
+    children: [
+      {
+        path: '',
+        redirectTo: '/login',
+        pathMatch: 'full'
+      },
+      {
+        path: 'login',
+        loadChildren: './login/login.module#LoginModule',
+      },
+      {
+        path: 'error',
+        loadChildren: './error/error.module#ErrorModule',
+      },
+    ]
+  },
+  {
+    path: '**',
+    redirectTo: '/error/not-found'
+  }
+];
+```
+
+##### altere o arquivo app.module.ts, alterando a forma de importar as rotas, através do RouterModule
+```
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+
+import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+
+import { SpinnerComponent } from './shared/spinner.component';
+import { BlankComponent } from './layouts/blank/blank.component';
+import { FullComponent } from './layouts/full/full.component';
+import { HeaderNavigationComponent } from './shared/header-navigation/header-navigation.component';
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    SpinnerComponent,
+    BlankComponent,
+    FullComponent,
+    HeaderNavigationComponent,
+  ],
+  imports: [
+    BrowserModule,
+    FormsModule,
+    RouterModule.forRoot(AppRoutingModule, { useHash: false }),
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+```
+### Vamos criar uma interface para o usuário
+```sh
+$ ng g interface _interfaces/user
+
+export interface User {
+    token: string;
+    id: number;
+    id_company: number;
+    name: string;
+    email: string;
+    active: string;
+    created_at: Date;
+    updated_at: Date;
+    deleted_at: Date;
+}
+```
+
+### Vamos criar o serviço que fará a autenticação do usuário
+```sh
+$ ng g s _services/auth --skipTests
+```
+##### auth.service.ts
+```
+import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+import { Observable } from 'rxjs';
+import 'rxjs/add/operator/do';
+import { User } from '../_interfaces/user';
+import { map } from 'rxjs/operators';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+
+  constructor(private http: HttpClient, private router: Router) { }
+
+  /* Verifica se o usuário tá autenticado */
+  check(): boolean {
+    return localStorage.getItem('currentUser') ? true : false;
+  }
+
+  /*
+    Realiza a autenticação na api e se o usuário for autenticado:
+    1. chama o método "formatUser(data)" que irá formatar os dados retornado para ser compatível com a interface do usuário;
+    2. Salva os dados do usuário no Local Storage.
+   */
+  login(credentials: {email: string, password: string}): Observable<User> {
+    return this.http.post<User>(environment.apiUrl + '/auth/login', credentials)
+      .pipe(
+        map(data => {
+          if (data) {
+            const user = this.formatedUser(data);
+            localStorage.setItem('currentUser', btoa(JSON.stringify(user)));
+            return <User>user;
+          } else {
+            return null;
+          }
+
+        })
+      );
+  }
+
+  /* Remove os dados do usuário autenticado do Local Storage e redireciona para tela de Login */
+  logout(): void {
+    localStorage.removeItem('currentUser');
+    this.router.navigate(['autenticacao/login']);
+  }
+
+  /* Pega os dados do usuário do Local Storage */
+  getUser(): User {
+    return localStorage.getItem('currentUser') ? JSON.parse(atob(localStorage.getItem('currentUser'))) : null;
+  }
+
+  /* Renova o token do usuário cado o mesmo tenha expirado */
+  refreshToken() : Observable<User> {
+    let currentUser = this.getUser();
+    let token = currentUser.token;
+ 
+    return this.http.post<User>(`${environment.apiUrl}/auth/refresh`, { 'token': token })
+      .pipe(
+        map(data => {
+ 
+          if (data && data.token) {
+            const user = this.formatedUser(data);
+            localStorage.setItem('currentUser', btoa(JSON.stringify(user)));
+            return <User>user;
+          } else {
+            return null;
+          }
+ 
+      }));
+  }
+
+
+  /* Retorna o token do usuário autenticado */
+  getAuthToken() : string {
+    let currentUser = this.getUser();
+ 
+    if(currentUser != null) {
+      return currentUser.token;
+    }
+ 
+    return '';
+  }
+
+  /* Formata os dados retornado no login de acordo com a interface do usuário (Interfaces/user.ts) */
+  formatedUser(data) {
+    return {
+      token: data.token,
+      id: data.user.id,
+      name: data.user.name,
+      email: data.user.email,
+      active: data.user.active,
+      created_at: data.user.created_at,
+      updated_at: data.user.updated_at,
+      deleted_at: data.user.deleted_at
+    }
+  }
+
+}
+```
+
+### Vamos criar o "auth.guard.ts"
+Ele que protegerá as rotas privadas.
+1. Clique com o botão direito na pasta __app__ e new folder "_guards";
+2. Dentro da pasta _guards crie o arquivo __auth.guard.ts__ e insira o código abaixo:
+```
+import { Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router, CanActivateChild } from '@angular/router';
-import { AuthService } from './../auth/services/auth.service';
+import { AuthService } from './../_services/auth.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate, CanActivateChild {
 
- constructor(private auth: AuthService, private router: Router) { }
+  constructor(private auth: AuthService, private router: Router) { }
 
- canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
-   if ( this.auth.check() ) {
-     return true;
-   }
-   this.router.navigate(['auth/login']);
-   return false;
- }
-
- canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
-   if ( this.auth.check() ) {
-     return true;
-   }
-   this.router.navigate(['auth/login']);
-   return false;
- }
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
+    if ( this.auth.check() ) {
+      return true;
+    }
+    this.router.navigate(['login'], { queryParams: { returnUrl: state.url }});
+  }
+  
+  canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
+    if ( this.auth.check() ) {
+      return true;
+    }
+    this.router.navigate(['login'], { queryParams: { returnUrl: state.url }});
+  }
 
 }
 ```
-__Como ele será um serviço global, importá-lo no provider do app.module.__
 
-4. Nas rotas de administrador *(admin/admin-routing)* inserir o serviço de guardião de rotas.
-```
-import { AdminDashboard2Component } from './../admin-dashboard2/admin-dashboard2.component';
-import { AdminDashboard1Component } from './../admin-dashboard1/admin-dashboard1.component';
-import { AdminComponent } from './../admin.component';
-import { NgModule, Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+### Vamos criar o "interceptor"
+Ele que interceptará as requisições ao servidor para inserir no cabeçalho da requisição o token do usuário autenticado.
+1. Clique com o botão direito na pasta __app__ e new folder "_interceptors";
+2. Dentro da pasta _interceptors crie o arquivo __token.interceptor.ts__ e insira o código abaixo:
 
-import { AuthGuard } from '../../guards/auth.guard';
-
-@NgModule({
- imports: [
-   RouterModule.forChild([
-     {
-       path: 'admin',
-       component: AdminComponent, canActivate: [AuthGuard], canActivateChild: [AuthGuard],
-       children: [
-         {
-           path: '',
-           redirectTo: 'dashboard1',
-           pathMatch: 'full'
-         },
-         {
-           path: 'dashboard1',
-           component: AdminDashboard1Component
-         },
-         {
-           path: 'dashboard2',
-           component: AdminDashboard2Component
-         }
-       ]
-     }
-   ])
- ],
- exports: [
-   RouterModule
- ]
-})
-export class AdminRoutingModule { }
-```
-__OBS.:__ Essa verificação não está segura, pois se o usuário criar direto no localStorage um usuário com um valor qualquer ele vai ter acesso a rota restrita, pois tá verificando apenas se existe a sessão user.
-
-### Adicionando token no header da requisição
-
-O __intercept__ foi incluído a partir da versão 4.3 do Angular, usar o mesmo para evitar de passar em toda requisição um options com o header.
-
-1. Em app criar um diretório chamado __interceptors__ e dentro dele um arquivo chamado __token.interceptor.ts__;
-2. Copiar o código da documentação do angular *(FUNTAMENTALS >> HttpClient >> Intercepting requests and responses)*: [https://angular.io/guide/http#intercepting-requests-and-responses](https://angular.io/guide/http#intercepting-requests-and-responses)
-3. Alterar o nome da classe para __TokenInterceptor__, o que essa classe irá fazer?
-Sempre que tiver uma requisição, ela irá interceptar essa requisição e adicionar o Token ao header da requisição.
 ```
 import { Injectable } from '@angular/core';
-import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest } from '@angular/common/http';
+import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest, HttpErrorResponse, HttpSentEvent, HttpHeaderResponse, HttpProgressEvent, HttpResponse, HttpUserEvent } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import { environment } from '../../environments/environment';
+import { AuthService } from '../_services/auth.service';
+import { BehaviorSubject, throwError } from 'rxjs';
+import { catchError, map, finalize, switchMap, take, filter } from 'rxjs/operators';
+import { User } from '../_interfaces/user';
+import { Router } from '@angular/router';
 
 /** Pass untouched request through to the next request handler. */
 @Injectable()
 export class TokenInterceptor implements HttpInterceptor {
 
- intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-   const requestUrl: Array<any> = request.url.split('/');
-   const apiUrl: Array<any> = environment.api_url.split('/');
-   const token = localStorage.getItem('token');
-   /* verifica se a requisição é para a api da aplicação */
-   if (token && (requestUrl[2] === apiUrl[2])) {
-     const newRequest = request.clone({ setHeaders: {'Authorization': `Bearer ${token}`} });
-     return next.handle(newRequest);
-   }else {
-     return next.handle(request);
-   }
- }
+  constructor(private authService: AuthService, private router: Router) { }
+ 
+  isRefreshingToken: boolean = false;
+  tokenSubject: BehaviorSubject<string> = new BehaviorSubject<string>(null);
+ 
+  intercept(request: HttpRequest<any>, next: HttpHandler) : Observable<HttpSentEvent | HttpHeaderResponse | HttpProgressEvent | HttpResponse<any> | HttpUserEvent<any> | any> {
+    
+    const requestUrl: Array<any> = request.url.split('/');
+    const apiUrl: Array<any> = environment.apiUrl.split('/');
+    const token = this.authService.getAuthToken();
+    
+    /* verifica se a requisição é para a api da aplicação */
+    if (token && (requestUrl[2] === apiUrl[2])) {
+    
+      return next.handle(this.addTokenToRequest(request, token))
+      .pipe(
+        catchError(err => {
+          if (err instanceof HttpErrorResponse) {
+            switch ((<HttpErrorResponse>err).status) {
+              case 401:
+                return this.handle401Error(request, next);
+              // case 400:
+              //   return <any>this.authService.logout();
+              case 500:
+                this.router.navigate(['error/internal-serve-error']);
+              default:
+                return throwError(err);
+            }
+          } else {
+            return throwError(err);
+          }
+        }));  
+      
+    } else {
 
-}
-```
-__OBS.:__ Esse conceito de __interceptor__ funciona com o mesmo conceito do __middleware__ do Laravel.
-
-4. Importar nosso interceptor no app.module:
-```
-providers: [
-   AuthGuard,
-   { provide: HTTP_INTERCEPTORS, useClass: TokenInterceptor, multi: true },
- ],
-```
-
-### Refresh Token
-
-1. Duplicar o __token.interception.ts__ e renomear para __refresh-token.interception.ts__.
-Ao contrário do __token.interception__, que intercepta o request antes da requisição, o __refresh-token.interception__ irá interceptar após a requisição, utilizando o operador __catch do rxjs__, se o token estiver expirado ele fará uma nova requisição para atualizar o token, se o tempo limite de expiração do token não tiver expirado ele carrega os dados de acordo com a requisição.
-__Para repetir a primeira requisição após requisitar a atualização do token é usado o operador flatMap do rxjs.__
-```
-import { Injectable, Injector } from '@angular/core';
-import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest, HttpErrorResponse, HttpClient } from '@angular/common/http';
-import { environment } from './../../environments/environment';
-// tslint:disable-next-line:import-blacklist
-import { Observable } from 'rxjs/Rx';
-
-@Injectable()
-export class RefreshTokenInterceptor implements HttpInterceptor {
-
- constructor(private injector: Injector) {}
-
- intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-
-   return next.handle(request).catch((errorResponse: HttpErrorResponse) => {
-     const error = (typeof errorResponse.error !== 'object') ? JSON.parse(errorResponse.error) : errorResponse;
-
-     if (errorResponse.status === 401 && error.error === 'token_expired') {
-       const http = this.injector.get(HttpClient);
-
-       return http.post<any>(`${environment.api_url}/auth/refresh`, {})
-         .flatMap(data => {
-           localStorage.setItem('token', data.token);
-           const cloneRequest = request.clone({setHeaders: {'Authorization': `Bearer ${data.token}`}});
-
-           return next.handle(cloneRequest);
-         });
-     }
-
-     return Observable.throw(errorResponse);
-   });
-
- }
-}
-```
-
-### Tratando outros erros de token
-Criar na raiz do app um arquivo chamado __app.error-handle.ts__, nele será tratado outros erros de token retornados do handle da nossa api.
-```
-import { Router } from '@angular/router';
-import { HttpErrorResponse } from '@angular/common/http';
-import { Injectable, ErrorHandler, Injector } from '@angular/core';
-
-@Injectable()
-export class AplicationErrorHandle extends ErrorHandler {
-
-  constructor(private injector: Injector) {
-    super();
-  }
-
-  handleError(errorResponse: HttpErrorResponse | any) {
-    if (errorResponse instanceof HttpErrorResponse) {
-      const error = (typeof errorResponse.error !== 'object') ? JSON.parse(errorResponse.error) : errorResponse.error;
-
-      if (errorResponse.status === 400 &&
-        (error.error === 'token_expired' || error.error === 'token_invalid' ||
-          error.error === 'A token is required' || error.error === 'token_not_provided')) {
-        this.goToLogin();
-      }
-
-      if (errorResponse.status === 401 && error.error === 'token_has_been_blacklisted') {
-        this.goToLogin();
-      }
+      return next.handle(request);
 
     }
-
-    super.handleError(errorResponse);
+ 
+    
   }
-
-  goToLogin(): void {
-    const router = this.injector.get(Router);
-    router.navigate(['auth/login']);
+ 
+  private addTokenToRequest(request: HttpRequest<any>, token: string) : HttpRequest<any> {
+    return request.clone({ setHeaders: { Authorization: `Bearer ${token}`}});
+  }
+ 
+  private handle401Error(request: HttpRequest<any>, next: HttpHandler) {
+ 
+    if(!this.isRefreshingToken) {
+      this.isRefreshingToken = true;
+ 
+      // Reset here so that the following requests wait until the token
+      // comes back from the refreshToken call.
+      this.tokenSubject.next(null);
+      return this.authService.refreshToken()
+        .pipe(
+          switchMap((user: User) => {
+            if(user) {
+              this.tokenSubject.next(user.token);;
+              localStorage.setItem('currentUser', btoa(JSON.stringify(user)));
+              return next.handle(this.addTokenToRequest(request, user.token));
+            }
+ 
+            return <any>this.authService.logout();
+          }),
+          catchError(err => {
+            return <any>this.authService.logout();
+          }),
+          finalize(() => {
+            this.isRefreshingToken = false;
+          })
+        );
+    } else {
+      this.isRefreshingToken = false;
+ 
+      return this.tokenSubject
+        .pipe(filter(token => token != null),
+          take(1),
+          switchMap(token => {
+          return next.handle(this.addTokenToRequest(request, token));
+        }));
+    }
   }
 
 }
 
 ```
+
+Se der erro na importação ```import { Observable } from 'rxjs/Observable';``` rode no terminal:
+```sh
+$ npm install rxjs-compat
+```
+
+### Agora vamos criar o componente Dashboard que terá sua rota protegida
+```sh
+$ ng g c dashboard --skipTests
+```
+
+Vamos criar manualmente o __module__ e __route__ independentes para o component __dashboard__:
+1. botão direito na pasta dashboard e new file __dashbord.module.ts__;
+```
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+
+import { DashboardRoutes } from './dashboard.routing';
+import { DashboardComponent } from './dashboard.component';
+
+@NgModule({
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    CommonModule,
+    RouterModule.forChild(DashboardRoutes)
+  ],
+  declarations: [
+    DashboardComponent
+  ]
+})
+export class DashboardModule { }
+```
+
+2. botão direito na pasta dashboard e new file __dasboard.routing.ts__;
+```
+import { Routes } from '@angular/router';
+import { DashboardComponent } from './dashboard.component';
+
+export const DashboardRoutes: Routes = [
+    {
+        path: '',
+        children: [
+            {
+                path: '',
+                component: DashboardComponent,
+                data: {
+                    title: 'Dashboard',
+                    urls: [
+                        { title: 'Dashboard', url: '/' },
+                        { title: 'Dashboard' }
+                    ]
+                }
+            }
+        ]
+    }
+
+];
+```
+
+#### Vamos incluir a rota protegida dá seção dashboard no nosso arquivo de rotas principal "app.routing.ts"
+```
+import { NgModule } from '@angular/core';
+import { Routes, RouterModule } from '@angular/router';
+
+import { FullComponent } from './layouts/full/full.component';
+import { BlankComponent } from './layouts/blank/blank.component';
+import { AuthGuard } from './_guards/auth.guard';
+
+export const AppRoutingModule: Routes = [
+  {
+    path: '',
+    component: FullComponent,
+    canActivate: [AuthGuard],
+    canActivateChild: [AuthGuard],
+    children: [
+      {
+        path: '',
+        redirectTo: '/dashboard',
+        pathMatch: 'full'
+      },
+      {
+        path: 'dashboard',
+        loadChildren: './dashboard/dashboard.module#DashboardModule',
+      }
+    ]
+  },
+  {
+    path: '',
+    component: BlankComponent,
+    children: [
+      {
+        path: 'login',
+        loadChildren: './login/login.module#LoginModule',
+      },
+      {
+        path: 'error',
+        loadChildren: './error/error.module#ErrorModule',
+      },
+    ]
+  },
+  {
+    path: '**',
+    redirectTo: '/error/not-found'
+  }
+];
+```
+
+#### Vamos importar no app.module.ts o serviço de autenticação, o guard e o interceptor
+```
+import { BrowserModule } from '@angular/platform-browser';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+
+import { FormsModule } from '@angular/forms';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { RouterModule } from '@angular/router';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+
+import { SpinnerComponent } from './shared/spinner.component';
+import { BlankComponent } from './layouts/blank/blank.component';
+import { FullComponent } from './layouts/full/full.component';
+import { HeaderNavigationComponent } from './shared/header-navigation/header-navigation.component';
+
+import { TokenInterceptor } from './_interceptors/token.interceptor';
+import { AuthService } from './_services/auth.service';
+import { AuthGuard } from './_guards/auth.guard';
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    SpinnerComponent,
+    BlankComponent,
+    FullComponent,
+    HeaderNavigationComponent,
+  ],
+  imports: [
+    CommonModule,
+    BrowserModule,
+    FormsModule,
+    HttpClientModule,
+    RouterModule.forRoot(AppRoutingModule, { useHash: false }),
+  ],
+  providers: [
+    AuthGuard,
+    AuthService,
+    { 
+      provide: HTTP_INTERCEPTORS,
+      useClass: TokenInterceptor,
+      multi: true
+    },
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+```
+
+Agora restart o servidor
+```sh
+$ Ctrl + c
+$ ng serve
+```
+
+Tente acessar a rota: [http://localhost:4200/dashboard](http://localhost:4200/dashboard), o __guard__ deverá redirecionar para tela de login.
+
+### Vamos finalizar nossa tela de Login
+
+
+
+

@@ -1,0 +1,88 @@
+.container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+  }
+  .form-control {
+      height: calc(48px + 2px);
+  }
+  
+  .form-signin {
+      width: 100%;
+      max-width: 420px;
+      padding: 15px;
+      margin: 0 auto;
+      top: 50%;
+      transform: translateY(-50%);
+      position: relative;
+    }
+    
+    .form-label-group {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    
+    .form-label-group > input,
+    .form-label-group > label {
+      padding: 12px 12px;
+    }
+    
+    .form-label-group > label {
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: block;
+      width: 100%;
+      margin-bottom: 0; /* Override default `<label>` margin */
+      line-height: 1.5;
+      color: #495057;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      transition: all .1s ease-in-out;
+    }
+    
+    .form-label-group input::-webkit-input-placeholder {
+      color: transparent;
+    }
+    
+    .form-label-group input:-ms-input-placeholder {
+      color: transparent;
+    }
+    
+    .form-label-group input::-ms-input-placeholder {
+      color: transparent;
+    }
+    
+    .form-label-group input::-moz-placeholder {
+      color: transparent;
+    }
+    
+    .form-label-group input::placeholder {
+      color: transparent;
+    }
+    
+    .form-label-group input:not(:placeholder-shown) {
+      padding-top: calc(12px + 12px * (2 / 3));
+      padding-bottom: calc(12px / 3);
+    }
+    
+    .form-label-group input:not(:placeholder-shown) ~ label {
+      padding-top: calc(.12px / 3);
+      padding-bottom: calc(12px / 3);
+      font-size: 12px;
+      color: #777;
+    }
+  
+  .btn {
+    img {
+      width: 26px;
+      position: absolute;
+      right: 25px;
+    }
+  }
+
+  .logo {
+      width: 80%;
+  }

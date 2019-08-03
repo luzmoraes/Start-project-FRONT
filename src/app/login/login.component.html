@@ -1,0 +1,28 @@
+<div class="container">
+    <form class="form-signin" [formGroup]="formGroupLogin" (ngSubmit)="onSubmitLogin()" novalidate>
+        <div class="text-center mb-4">
+            <h1>LOGIN</h1>
+        </div>
+
+        <div class="form-label-group">
+            <input type="text" class="form-control" placeholder="Email" required autofocus
+                [ngClass]="{ 'input-error': ( formGroupLogin.get('username').dirty && formGroupLogin.get('username').hasError('required') ) }"
+                name="username" id="username" formControlName="username">
+            <label for="username">Email</label>
+        </div>
+
+        <div class="form-label-group">
+            <input type="password" class="form-control" placeholder="Senha de acesso" required
+                [ngClass]="{ 'input-error': ( formGroupLogin.get('password').dirty && formGroupLogin.get('password').hasError('required') ) || ( formGroupLogin.get('password').dirty && formGroupLogin.get('password').hasError('minlength') ) || ( formGroupLogin.get('password').dirty && formGroupLogin.get('password').hasError('maxlength') ) }"
+                name="password" id="password" formControlName="password">
+            <label for="password">Senha de acesso</label>
+        </div>
+        
+        <button type="submit" class="btn btn-lg btn-primary btn-block" [disabled]="submitted">Entrar <img
+                src="assets/images/loading_login.gif" alt="" *ngIf="submitted"></button>
+        <p class="mt-5 mb-3 text-muted text-center">&copy; 2017 Linha Direta Company</p>
+        <div class="alert alert-danger" *ngIf="errorCredentials">
+            <strong>Erro!</strong> Email ou senha inválidos.
+        </div>
+    </form>
+</div>
