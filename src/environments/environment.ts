@@ -4,7 +4,15 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8000/api'
+  apiUrl: 'http://localhost:8000',
+  clientInfo: {
+    "grant_type": "password",
+    "client_id": 2,
+    "client_secret": "pXFZI5HVoMqhjTcYOu7khFr1rYYknjnU1aNCQ4KL",
+    "username": "",
+    "password": "",
+    "scope": ""
+  }
 };
 
 /*

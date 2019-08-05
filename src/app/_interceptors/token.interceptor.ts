@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest, HttpErrorResponse, HttpSentEvent, HttpHeaderResponse, HttpProgressEvent, HttpResponse, HttpUserEvent } from '@angular/common/http';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../_services/auth.service';
 import { BehaviorSubject, throwError } from 'rxjs';
 import { catchError, map, finalize, switchMap, take, filter } from 'rxjs/operators';
 import { User } from '../_interfaces/user';
 import { Router } from '@angular/router';
+import { Token } from '../_interfaces/token';
 
 /** Pass untouched request through to the next request handler. */
 @Injectable()
@@ -33,8 +34,8 @@ export class TokenInterceptor implements HttpInterceptor {
             switch ((<HttpErrorResponse>err).status) {
               case 401:
                 return this.handle401Error(request, next);
-              // case 400:
-              //   return <any>this.authService.logout();
+              case 400:
+                return <any>this.authService.logout();
               case 500:
                 this.router.navigate(['error/internal-serve-error']);
               default:
@@ -59,7 +60,6 @@ export class TokenInterceptor implements HttpInterceptor {
   }
  
   private handle401Error(request: HttpRequest<any>, next: HttpHandler) {
- 
     if(!this.isRefreshingToken) {
       this.isRefreshingToken = true;
  
@@ -68,11 +68,11 @@ export class TokenInterceptor implements HttpInterceptor {
       this.tokenSubject.next(null);
       return this.authService.refreshToken()
         .pipe(
-          switchMap((user: User) => {
-            if(user) {
-              this.tokenSubject.next(user.token);;
-              localStorage.setItem('currentUser', btoa(JSON.stringify(user)));
-              return next.handle(this.addTokenToRequest(request, user.token));
+          switchMap((token: Token) => {
+            if(token) {
+              this.tokenSubject.next(token.access_token);;
+              localStorage.setItem('currentToken', btoa(JSON.stringify(token)));
+              return next.handle(this.addTokenToRequest(request, token.access_token));
             }
  
             return <any>this.authService.logout();
