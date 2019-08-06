@@ -11,6 +11,9 @@ export class DashboardComponent implements OnInit {
   constructor(private alertify: AlertifyService) { }
 
   ngOnInit() {
+  }
+  
+  btnDelete() {
     this.alertify.confirm('Atenção', 'Deseja excluir o registro?',
       () => {
         this.alertify.success('Excluído!');
