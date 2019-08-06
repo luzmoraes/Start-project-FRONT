@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { AlertifyService } from '../_services/alertify.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -7,9 +8,17 @@ import { Component, OnInit } from '@angular/core';
 })
 export class DashboardComponent implements OnInit {
 
-  constructor() { }
+  constructor(private alertify: AlertifyService) { }
 
   ngOnInit() {
+    this.alertify.confirm('Atenção', 'Deseja excluir o registro?',
+      () => {
+        this.alertify.success('Excluído!');
+      },
+      () => {
+        this.alertify.error('Cancelado!');
+      }
+    );
   }
 
 }
