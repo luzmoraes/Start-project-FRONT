@@ -17,6 +17,7 @@ import { HeaderNavigationComponent } from './shared/header-navigation/header-nav
 import { TokenInterceptor } from './_interceptors/token.interceptor';
 import { AuthService } from './_services/auth.service';
 import { AuthGuard } from './_guards/auth.guard';
+import { BreadcrumbsComponent } from './shared/breadcrumbs/breadcrumbs.component';
 
 @NgModule({
   declarations: [
@@ -25,6 +26,7 @@ import { AuthGuard } from './_guards/auth.guard';
     BlankComponent,
     FullComponent,
     HeaderNavigationComponent,
+    BreadcrumbsComponent,
   ],
   imports: [
     CommonModule,

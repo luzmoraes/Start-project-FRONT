@@ -1,2 +1,19 @@
-<app-header-navigation></app-header-navigation>
-<router-outlet></router-outlet>
+<div id="main-wrapper">
+    <header class="topbar">
+        <app-header-navigation></app-header-navigation>
+    </header>
+    
+    <div class="page-wrapper container">
+        <app-breadcrumbs></app-breadcrumbs>
+        <div class="container-fluid">
+            <router-outlet></router-outlet>
+        </div>        
+        <footer class="footer text-center">
+            YCLOUD 2019 | Todos os direitos reservados. Designed and Developed by
+            <a href="http://ycloud.com.br">YCLOUD</a>.
+        </footer>
+    </div>
+</div>
+<!-- <app-header-navigation></app-header-navigation>
+<app-breadcrumbs></app-breadcrumbs>
+<router-outlet></router-outlet> -->

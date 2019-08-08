@@ -9,10 +9,10 @@ export const DashboardRoutes: Routes = [
                 path: '',
                 component: DashboardComponent,
                 data: {
-                    title: 'Dashboard',
+                    title: 'Título dá página',
                     urls: [
                         { title: 'Dashboard', url: '/' },
-                        { title: 'Dashboard' }
+                        { title: 'principal' }
                     ]
                 }
             }

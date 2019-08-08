@@ -1269,4 +1269,141 @@ export class MyComponent implements OnInit {
 }
 ```
 
+#### instalar angular-fontawesome
+```sh
+$ npm install @fortawesome/fontawesome-svg-core
+$ npm install @fortawesome/free-solid-svg-icons
+# Veja a tabela de compatibilidade abaixo para escolher a versão correta
+$ npm install @fortawesome/angular-fontawesome@<version>
+```
 
+##### Tabela de compatibilidade
+@fortawesome/angular-fontawesome | Angular
+---|---
+0.1.x | 5.x
+0.2.x | 6.x
+0.3.x | 6.x && 7.x
+0.4.x | 8.x
+
+##### Como usar
+1. Inclua FontAwesomeModule no imports do ```src/app/app.module.ts```
+_OBS.: se você estiver usando módulos por componente importe no módulo do componente_
+```
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+
+import { AppComponent } from './app.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+
+@NgModule({
+  imports: [
+    BrowserModule,
+    FontAwesomeModule
+  ],
+  declarations: [AppComponent],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+```
+2. Import os ícones que for utilizar no seu componente ```src/app/app.component.ts```
+```
+import { Component } from '@angular/core';
+import { faCoffee } from '@fortawesome/free-solid-svg-icons';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html'
+})
+export class AppComponent {
+  faCoffee = faCoffee;
+}
+```
+3. Insira o ícone no seu html ```src/app/app.component.html```:
+```
+<fa-icon [icon]="faCoffee"></fa-icon>
+```
+
+### Utiulizando BREADCRUMBS
+
+##### Criar um componente na pasta shared
+```sh
+$ ng g c shared/breadcrumbs --skipTests
+```
+Editar ```breadcrumbs.component.ts```
+```
+import { Component, Input, OnInit } from '@angular/core';
+import { Title } from '@angular/platform-browser';
+import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
+import { filter, map, mergeMap } from 'rxjs/operators';
+
+@Component({
+  selector: 'app-breadcrumbs',
+  templateUrl: './breadcrumbs.component.html',
+  styleUrls: ['./breadcrumbs.component.scss']
+})
+export class BreadcrumbsComponent implements OnInit {
+
+  @Input() layout;
+  pageInfo;
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+    private titleService: Title
+  ) {
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .pipe(map(() => this.activatedRoute))
+      .pipe(
+        map(route => {
+          while (route.firstChild) {
+            route = route.firstChild;
+          }
+          return route;
+        })
+      )
+      .pipe(filter(route => route.outlet === 'primary'))
+      .pipe(mergeMap(route => route.data))
+      .subscribe(event => {
+        this.titleService.setTitle(event['title']);
+        this.pageInfo = event;
+      });
+  }
+  
+  ngOnInit() {}
+
+}
+```
+
+Editar o ```breadcrumbs.component.html```
+```
+<!-- ============================================================== -->
+<!-- Bread crumb and right sidebar toggle -->
+<!-- ============================================================== -->
+<div class="page-breadcrumb">
+    <div class="row">
+        <div class="col-12 align-self-center">
+            <h4 class="page-title">{{pageInfo?.title}}</h4>
+            <div class="d-flex align-items-center">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <ng-template ngFor let-url [ngForOf]="pageInfo?.urls" let-last="last">
+                            <li class="breadcrumb-item" *ngIf="!last" [routerLink]="url.url">
+                                <a href='javascript:void(0)'>{{url.title}}</a>
+                            </li>
+                            <li class="breadcrumb-item active" *ngIf="last">{{url.title}}</li>
+                        </ng-template>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ============================================================== -->
+<!-- End Bread crumb and right sidebar toggle -->
+<!-- ============================================================== -->
+```
+
+Incluir a tag do breadcrumbs no layout **full** abaixo do header
+```
+<app-breadcrumbs></app-breadcrumbs>
+```
