@@ -39,7 +39,8 @@ export class TokenInterceptor implements HttpInterceptor {
               case 500:
                 this.router.navigate(['error/internal-serve-error']);
               default:
-                return throwError(err);
+                // return throwError(err);
+                return <any>this.authService.logout();
             }
           } else {
             return throwError(err);

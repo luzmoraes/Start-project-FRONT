@@ -45,11 +45,10 @@ export class AuthService {
   }
 
   logout(): void {
-    this.http.get(environment.apiUrl + '/api/user/logout').subscribe(res =>{
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('currentToken');
-      this.router.navigate(['login']);
-    });
+    this.http.get(environment.apiUrl + '/api/user/logout').subscribe(res => {});
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('currentToken');
+    this.router.navigate(['login']);
   }
 
   check(): boolean {

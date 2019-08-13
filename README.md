@@ -212,6 +212,13 @@ export class SpinnerComponent implements OnDestroy {
 }
 ```
 
+Chamar o componente Spinner ```na app.component.html``` da segunte forma:
+```
+<router-outlet>
+    <app-spinner></app-spinner>
+</router-outlet>
+```
+
 #### Vamos importar os componentes criados no módulo global (app.module.ts)
 ```
 import { SpinnerComponent } from './shared/spinner.component';
@@ -718,11 +725,10 @@ export class AuthService {
   }
 
   logout(): void {
-    this.http.get(environment.apiUrl + '/api/user/logout').subscribe(res =>{
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('currentToken');
-      this.router.navigate(['login']);
-    });
+    this.http.get(environment.apiUrl + '/api/user/logout').subscribe(res => {});
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('currentToken');
+    this.router.navigate(['login']);
   }
 
   check(): boolean {
